@@ -180,6 +180,9 @@ INCLUDE_SNMP ?= y
 # INCLUDE_LLDP - build docker-lldp for LLDP support
 INCLUDE_LLDP ?= y
 
+# INCLUDE_CLOCK - build docker-clock for PTP (IEEE 1588) support
+INCLUDE_CLOCK ?= y
+
 # INCLUDE_SFLOW - build docker-sflow for sFlow support
 INCLUDE_SFLOW = y
 

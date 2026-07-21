@@ -153,3 +153,7 @@
 [submodule "platform/aspeed/sonic-platform-modules-arista"]
 	path = platform/aspeed/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
+[submodule "src/sonic-clock"]
+	path = src/sonic-clock
+	url = https://github.com/Griffin-micas/sonic-clock.git
+	branch = ptp-feature-branch

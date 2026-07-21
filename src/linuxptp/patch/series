@@ -1,0 +1,3 @@
+# SONiC-specific patches for linuxptp 4.2-1
+# Add patch filenames here in application order, one per line.
+# (No patches required for the initial release.)

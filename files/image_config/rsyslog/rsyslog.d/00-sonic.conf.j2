@@ -53,6 +53,16 @@ if $msg startswith " otel" then {
     stop
 }
 
+## clock rules
+# Match every process in the clock container by programname (clock#<prog>),
+# so each daemon's own syslog (use_syslog -> clock#ptp4l/clockcfgd/...) and the
+# supervisord forwards all land in clock.log. ptp4l drops -m (see supervisord.conf)
+# so it logs once via use_syslog instead of duplicating to stdout->syslog.
+if $programname startswith "clock#" then {
+    /var/log/clock.log
+    stop
+}
+
 ## stpd rules
 if $programname contains "stp" then {
     if not ($msg contains "STP_SYSLOG") then {

@@ -1,0 +1,109 @@
+[supervisord]
+logfile_maxbytes=1MB
+logfile_backups=2
+nodaemon=true
+
+[eventlistener:dependent-startup]
+command=python3 -m supervisord_dependent_startup
+autostart=true
+autorestart=unexpected
+startretries=0
+exitcodes=0,3
+events=PROCESS_STATE
+buffer_size=1024
+
+[eventlistener:supervisor-proc-exit-listener]
+command=/usr/bin/supervisor-proc-exit-listener-rs --container-name clock
+events=PROCESS_STATE_EXITED,PROCESS_STATE_RUNNING
+autostart=true
+autorestart=unexpected
+buffer_size=1024
+
+[program:rsyslogd]
+command=/usr/sbin/rsyslogd -n -iNONE
+priority=1
+autostart=false
+autorestart=false
+stdout_logfile=NONE
+stdout_syslog=true
+stderr_logfile=NONE
+stderr_syslog=true
+dependent_startup=true
+
+[program:start]
+command=/usr/bin/start.sh
+priority=2
+autostart=false
+autorestart=false
+startsecs=0
+stdout_logfile=NONE
+stdout_syslog=true
+stderr_logfile=NONE
+stderr_syslog=true
+dependent_startup=true
+dependent_startup_wait_for=rsyslogd:running
+
+# clocksyncd must start before clockcfgd (lower priority value = earlier startup).
+# On startup clocksyncd unconditionally sets the 1PPS pin to 'output' via DPLL
+# netlink and then reconciles to the direction implied by CONFIG_DB.clock_source,
+# so the pin direction is settled before clockcfgd is allowed to start ptp4l.
+[program:clocksyncd]
+command=/usr/bin/clocksyncd
+priority=3
+autostart=false
+autorestart=false
+stdout_logfile=NONE
+stdout_syslog=true
+stderr_logfile=NONE
+stderr_syslog=true
+dependent_startup=true
+dependent_startup_wait_for=start:exited
+# Allow enough time for the SIGTERM handler to flip the 1PPS pin to 'input'
+# and clear STATE_DB.PTP_*_TABLE before supervisord escalates to SIGKILL.
+stopsignal=TERM
+stopwaitsecs=5
+
+# clockcfgd starts after clocksyncd is running. It is the sole owner of
+# ptp4l lifecycle: it subscribes CONFIG_DB, validates configuration, renders
+# ptp4l.conf, and manages ptp4l via supervisorctl start/stop/restart.
+[program:clockcfgd]
+command=python3 -m clockcfgd
+priority=4
+autostart=false
+autorestart=false
+stdout_logfile=NONE
+stdout_syslog=true
+stderr_logfile=NONE
+stderr_syslog=true
+dependent_startup=true
+dependent_startup_wait_for=clocksyncd:running
+
+# ptp4l is NOT autostarted. clockcfgd starts/stops it via supervisorctl
+# only when mode is ordinary-clock or boundary-clock and the configuration
+# is valid. It is intentionally excluded from critical_processes because
+# its expected presence depends on mode and PTP_PORT cardinality.
+[program:ptp4l]
+command=ptp4l -f /etc/linuxptp/ptp4l.conf -H
+priority=5
+autostart=false
+autorestart=false
+stdout_logfile=NONE
+stdout_syslog=true
+stderr_logfile=NONE
+stderr_syslog=true
+
+# esmcd runs the SyncE ESMC source-selection algorithm. Like ptp4l it is
+# config-driven and non-resident: it is NOT autostarted and is intentionally
+# excluded from critical_processes because its expected presence depends on
+# SyncE configuration. clockcfgd owns its lifecycle via supervisorctl, the
+# same way it owns ptp4l. /etc/synce/synce.conf is rendered by clockcfgd
+# from CONFIG_DB SYNCE_CLOCK / SYNCE_PORT before each (re)start.
+[program:esmcd]
+command=esmcd -c /etc/synce/synce.conf
+priority=6
+autostart=false
+autorestart=false
+stdout_logfile=NONE
+stdout_syslog=true
+stderr_logfile=NONE
+stderr_syslog=true

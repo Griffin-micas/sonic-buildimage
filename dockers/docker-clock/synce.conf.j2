@@ -1,0 +1,27 @@
+###############################################################################
+# Managed by clockcfgd (rendered from CONFIG_DB SYNCE_CLOCK / SYNCE_PORT).
+# Source: /usr/share/sonic/templates/synce.conf.j2
+#
+# Rendered only when SYNCE_CLOCK|GLOBAL.mode != 'disable'. mode=disable
+# suppression is handled by clockcfgd before template rendering.
+#
+# Format: see doc/ptp/esmc-config-format.md. Sections are emitted in
+# deterministic order; absent CONFIG_DB fields are omitted entirely so
+# esmcd applies its own defaults.
+###############################################################################
+
+[global]
+{% for key, value in SYNCE_CLOCK | dictsort %}
+{{ key }}={{ value }}
+{% endfor %}
+{% for port_name, attrs in SYNCE_PORT | dictsort %}
+
+{% if port_name == 'external' %}
+[external]
+{% else %}
+[{{ port_name }}]
+{% endif %}
+{% for key, value in attrs | dictsort %}
+{{ key }}={{ value }}
+{% endfor %}
+{% endfor %}

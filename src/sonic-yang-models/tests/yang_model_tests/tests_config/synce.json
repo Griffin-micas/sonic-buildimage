@@ -1,0 +1,247 @@
+{
+    "SYNCE_CLOCK_DISABLE_DEFAULTS_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_AUTO_OPTION1_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "mode": "auto",
+                        "pll_mode": "auto",
+                        "ssm_mode": "enabled",
+                        "switch_mode": "revertive",
+                        "network_type": "1",
+                        "information_interval": 1,
+                        "holdoff_interval": 10,
+                        "wait_to_restore_interval": 300,
+                        "max_out_ssm": "PRC"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_MANUAL_PORT_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "mode": "manual",
+                        "manual_port": "Ethernet0"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_MANUAL_EXTERNAL_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "mode": "manual",
+                        "manual_port": "external"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_OPTION2_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "mode": "auto",
+                        "network_type": "2",
+                        "max_out_ssm": "PRS"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_PORT_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_PORT": {
+                "SYNCE_PORT_LIST": [
+                    {
+                        "interface_name": "Ethernet0",
+                        "priority": 10,
+                        "ssm": "PRC"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_PORT_EXTERNAL_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_PORT": {
+                "SYNCE_PORT_LIST": [
+                    {
+                        "interface_name": "external",
+                        "priority": 1,
+                        "ssm": "PRC"
+                    }
+                ]
+            }
+        }
+    },
+
+    "SYNCE_CLOCK_INVALID_ID_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL_X"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_INVALID_MODE_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "mode": "semi-auto"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_MANUAL_PORT_WITHOUT_MANUAL_MODE_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "mode": "auto",
+                        "manual_port": "Ethernet0"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_MANUAL_PORT_INVALID_PATTERN_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "mode": "manual",
+                        "manual_port": "Eth0"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_INFO_INTERVAL_OUT_OF_RANGE_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "information_interval": 61
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_HOLDOFF_OUT_OF_RANGE_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "holdoff_interval": 301
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_WTR_OUT_OF_RANGE_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "wait_to_restore_interval": 3601
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_INVALID_NETWORK_TYPE_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "network_type": "3"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_CLOCK_SSM_MISMATCH_NETWORK_TYPE_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_CLOCK": {
+                "SYNCE_CLOCK_LIST": [
+                    {
+                        "id": "GLOBAL",
+                        "network_type": "1",
+                        "max_out_ssm": "PRS"
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_PORT_PRIORITY_OUT_OF_RANGE_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_PORT": {
+                "SYNCE_PORT_LIST": [
+                    {
+                        "interface_name": "Ethernet0",
+                        "priority": 0
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_PORT_INVALID_IFNAME_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_PORT": {
+                "SYNCE_PORT_LIST": [
+                    {
+                        "interface_name": "Eth0",
+                        "priority": 10
+                    }
+                ]
+            }
+        }
+    },
+    "SYNCE_PORT_INVALID_SSM_TEST": {
+        "sonic-synce:sonic-synce": {
+            "sonic-synce:SYNCE_PORT": {
+                "SYNCE_PORT_LIST": [
+                    {
+                        "interface_name": "Ethernet0",
+                        "priority": 10,
+                        "ssm": "FOO"
+                    }
+                ]
+            }
+        }
+    }
+}

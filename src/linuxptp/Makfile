@@ -1,0 +1,48 @@
+.ONESHELL:
+SHELL = /bin/bash
+.SHELLFLAGS += -e
+
+MAIN_TARGET = $(LINUXPTP)
+DERIVED_TARGETS = $(LINUXPTP_DBG)
+
+# SONiC's curated mirror at $(BUILD_PUBLIC_URL)/debian/pool/ does not host
+# linuxptp 4.2-1 (it carries an older version only). Fetch directly from
+# the Debian upstream pool instead — same pattern as bash, libnl3, iptables,
+# isc-dhcp, grpc, openssh, etc. in this repo.
+LINUXPTP_URL = https://deb.debian.org/debian/pool/main/l/linuxptp
+
+DSC_FILE    = linuxptp_$(LINUXPTP_VERSION_FULL).dsc
+ORIG_FILE   = linuxptp_$(LINUXPTP_VERSION).orig.tar.gz
+DEBIAN_FILE = linuxptp_$(LINUXPTP_VERSION_FULL).debian.tar.xz
+
+DSC_FILE_URL = $(LINUXPTP_URL)/$(DSC_FILE)
+
+$(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
+	# Remove any stale build directory for a clean build
+	rm -rf linuxptp-$(LINUXPTP_VERSION)
+
+	# Download the Debian source package (dget fetches the .dsc and all
+	# referenced tarballs, then extracts via dpkg-source automatically)
+	dget $(DSC_FILE_URL)
+
+	pushd linuxptp-$(LINUXPTP_VERSION)
+	git init
+	git add -f *
+	git commit -m "unmodified linuxptp source"
+
+	# Apply any SONiC-specific patches on top of the upstream source
+	stg init
+	stg import -s ../patch/series
+
+	# Build the Debian binary package
+ifeq ($(CROSS_BUILD_ENVIRON), y)
+	dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+else
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+endif
+	popd
+
+	# Move the newly-built .deb packages to the destination directory
+	mv $* $(DERIVED_TARGETS) $(DEST)/
+
+$(addprefix $(DEST)/, $(DERIVED_TARGETS)): $(DEST)/% : $(DEST)/$(MAIN_TARGET)

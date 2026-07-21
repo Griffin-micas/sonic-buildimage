@@ -1,0 +1,218 @@
+###############################################################################
+# Managed by sonic-config-engine (rendered at runtime by clockcfgd)
+# Source: /usr/share/sonic/templates/ptp4l.conf.j2
+#
+# This template is rendered only when mode is ordinary-clock or boundary-clock.
+# mode=disable suppression is handled by clockcfgd before template rendering.
+###############################################################################
+
+{% set clock_cfg = PTP_CLOCK['GLOBAL'] %}
+{% set port_cfgs = PTP_PORT %}
+
+{% set mode = clock_cfg['mode'] if 'mode' in clock_cfg else 'ordinary-clock' %}
+{% set clock_source = clock_cfg['clock_source'] if 'clock_source' in clock_cfg else 'ptp' %}
+
+{#
+  Map CONFIG_DB mode values to the linuxptp clock_type enum.
+  LLD note: CONFIG_DB uses 'ordinary-clock'/'boundary-clock'; ptp4l.conf
+  requires 'OC'/'BC'. The template performs the translation here.
+#}
+{% if mode == 'boundary-clock' %}
+{% set clock_type = 'BC' %}
+{% else %}
+{% set clock_type = 'OC' %}
+{% endif %}
+
+{% set two_step_flag = 0 if 'step_mode' in clock_cfg and clock_cfg['step_mode'] == 'one-step' else 1 %}
+
+{#
+  clock_source=1pps forces clientOnly=0 so the device serves time downstream.
+  clockcfgd has already rejected clock_source=1pps + client_only=true at the
+  validation layer, so the rendering override here is always safe.
+
+  client_only is a YANG boolean, stored in CONFIG_DB as the string 'true' /
+  'false'. A non-empty string is always truthy in Jinja, so compare against
+  'false' explicitly rather than relying on `not clock_cfg['client_only']`
+  (which would treat both 'true' and 'false' as True and pin clientOnly to 1).
+  Default (field absent) is 'true', matching the YANG default.
+#}
+{% set client_only = 0 if clock_source == '1pps' or clock_cfg.get('client_only', 'true') == 'false' else 1 %}
+
+{% set domain_number = clock_cfg['domain_number'] if 'domain_number' in clock_cfg else 0 %}
+{% set priority1 = clock_cfg['priority1'] if 'priority1' in clock_cfg else 128 %}
+{% set priority2 = clock_cfg['priority2'] if 'priority2' in clock_cfg else 128 %}
+
+{#
+  Map CONFIG_DB network_transport values to linuxptp token strings.
+  linuxptp 4.2 config parser is case-sensitive: L2, UDPv4, UDPv6.
+#}
+{% set _nt = clock_cfg['network_transport'] if 'network_transport' in clock_cfg else 'l2' %}
+{% if _nt == 'udpv4' %}
+{% set network_transport = 'UDPv4' %}
+{% elif _nt == 'udpv6' %}
+{% set network_transport = 'UDPv6' %}
+{% else %}
+{% set network_transport = 'L2' %}
+{% endif %}
+
+{% set udp6_scope = clock_cfg['udp6_scope'] if 'udp6_scope' in clock_cfg else '0x0e' %}
+
+{#
+  cast_mode=unicast renders an explicit per-port unicast master table and makes each
+  member port reference it. clockcfgd has already validated (defense-in-depth against
+  direct CONFIG_DB writes) that unicast is only paired with udpv4/udpv6, that every
+  participating port carries a non-empty unicast_master list, and that each address
+  matches the transport family. logQueryInterval is fixed platform policy (the rate at
+  which the slave re-requests unicast transmission), not a northbound field; expose it
+  as a knob later if needed.
+#}
+{% set cast_mode = clock_cfg['cast_mode'] if 'cast_mode' in clock_cfg else 'multicast' %}
+{% set unicast = (cast_mode == 'unicast') %}
+{% set unicast_log_query_interval = 2 %}
+
+{#
+  Map CONFIG_DB dataset_comparison to the linuxptp token.
+  linuxptp uses 'ieee1588' (lowercase) and 'G.8275.x' (mixed case).
+#}
+{% set _dc = clock_cfg['dataset_comparison'] if 'dataset_comparison' in clock_cfg else 'ieee1588' %}
+{% if _dc == 'g.8275.x' %}
+{% set dataset_comparison = 'G.8275.x' %}
+{% else %}
+{% set dataset_comparison = 'ieee1588' %}
+{% endif %}
+
+{#
+  Map CONFIG_DB delay_mechanism to the linuxptp token.
+  linuxptp 4.2: E2E, P2P, Auto (case-sensitive).
+#}
+{% set _dm = clock_cfg['delay_mechanism'] if 'delay_mechanism' in clock_cfg else 'e2e' %}
+{% if _dm == 'p2p' %}
+{% set delay_mechanism = 'P2P' %}
+{% elif _dm == 'auto' %}
+{% set delay_mechanism = 'Auto' %}
+{% else %}
+{% set delay_mechanism = 'E2E' %}
+{% endif %}
+
+{% set log_announce_interval = clock_cfg['log_announce_interval'] if 'log_announce_interval' in clock_cfg else 1 %}
+{% set announce_receipt_timeout = clock_cfg['announce_receipt_timeout'] if 'announce_receipt_timeout' in clock_cfg else 3 %}
+{% set log_sync_interval = clock_cfg['log_sync_interval'] if 'log_sync_interval' in clock_cfg else 0 %}
+{% set log_min_delay_req_interval = clock_cfg['log_min_delay_req_interval'] if 'log_min_delay_req_interval' in clock_cfg else 0 %}
+{% set log_min_pdelay_req_interval = clock_cfg['log_min_pdelay_req_interval'] if 'log_min_pdelay_req_interval' in clock_cfg else 0 %}
+
+{# Fixed platform-policy tuning constants. Not sourced from CONFIG_DB.
+   Final values must be converged during SONiC/platform joint validation
+   (see LLD §SyncE-assisted Hybrid PHC discipline). #}
+{% set servo_offset_threshold = 200 %}
+{% set servo_num_offset_values = 10 %}
+{% set first_step_threshold = '0.00002' %}
+{% set step_threshold = '0.0' %}
+
+{# Static grandmaster attributes rendered into ptp4l.conf when clock_source=1pps.
+   clocksyncd overwrites the dynamic subset (clockClass, currentUtcOffset, etc.)
+   at runtime via 'pmc GRANDMASTER_SETTINGS_NP' once ptp4l is reachable. #}
+{% set gm_clock_class = 6 %}
+{% set gm_clock_accuracy = '0x21' %}
+{% set gm_offset_scaled_log_variance = '0x4e5d' %}
+{% set gm_time_source = '0x20' %}
+
+[global]
+clock_type              {{ clock_type }}
+twoStepFlag             {{ two_step_flag }}
+clientOnly              {{ client_only }}
+domainNumber            {{ domain_number }}
+priority1               {{ priority1 }}
+priority2               {{ priority2 }}
+network_transport       {{ network_transport }}
+{% if _nt == 'udpv6' %}
+udp6_scope              {{ udp6_scope }}
+{% endif %}
+dataset_comparison      {{ dataset_comparison }}
+delay_mechanism         {{ delay_mechanism }}
+logAnnounceInterval     {{ log_announce_interval }}
+announceReceiptTimeout  {{ announce_receipt_timeout }}
+logSyncInterval         {{ log_sync_interval }}
+logMinDelayReqInterval  {{ log_min_delay_req_interval }}
+logMinPdelayReqInterval {{ log_min_pdelay_req_interval }}
+
+time_stamping           hardware
+tx_timestamp_timeout    10
+logging_level           6
+use_syslog              1
+verbose                 0
+summary_interval        0
+
+# SyncE-assisted Hybrid mode: SyncE owns frequency, PTP owns phase only.
+clock_servo             nullf
+write_phase_mode        1
+
+# Fixed platform-policy tuning. Replace with validated values after
+# SONiC/platform joint integration and stability testing.
+servo_offset_threshold  {{ servo_offset_threshold }}
+servo_num_offset_values {{ servo_num_offset_values }}
+first_step_threshold    {{ first_step_threshold }}
+step_threshold          {{ step_threshold }}
+
+{% if clock_source == '1pps' %}
+# clock_source=1pps: device acts as grandmaster driven by a hardware 1PPS input.
+# These are the static initial Announce contents; clocksyncd will overwrite the
+# dynamic subset (clockClass, currentUtcOffset, traceability flags) at runtime
+# via 'pmc GRANDMASTER_SETTINGS_NP' based on PTP_1PPS_TABLE state.
+clockClass              {{ gm_clock_class }}
+clockAccuracy           {{ gm_clock_accuracy }}
+offsetScaledLogVariance {{ gm_offset_scaled_log_variance }}
+timeSource              {{ gm_time_source }}
+ptpTimescale            1
+leap_61                 0
+leap_59                 0
+{% endif %}
+
+{% if unicast %}
+{# cast_mode=unicast: render one [unicast_master_table] per master-bearing port BEFORE
+   the port sections, since ptp4l resolves the table_id at port init time. table_id is
+   the 1-based position of the port among master-bearing ports in dictsort order; the
+   port-section loop recomputes the same counter to emit the matching reference.
+   clockcfgd has already rejected any master under multicast and any role=master port
+   that carries masters (PTP_ERR_MASTER_TABLE_REQUIRES_UNICAST /
+   PTP_ERR_MASTER_PORT_HAS_UNICAST_MASTER), so a master-bearing port reaching here is
+   always a role=auto port under unicast -- no role check is needed in the template. #}
+{% set ut = namespace(id=0) %}
+{% for ifname, port in port_cfgs | dictsort %}
+{% if port.get('unicast_master') %}
+{% set ut.id = ut.id + 1 %}
+[unicast_master_table]
+table_id {{ ut.id }}
+logQueryInterval {{ unicast_log_query_interval }}
+{% for m in port['unicast_master'] %}
+{{ 'UDPv6' if ':' in m else 'UDPv4' }} {{ m }}
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% set ut2 = namespace(id=0) %}
+{% for ifname, port in port_cfgs | dictsort %}
+{# Per-port role is the only source of serverOnly. clockcfgd has already
+   validated that when clock_source=1pps every port has role=master, so
+   no clock_source-specific override is needed here. #}
+{% set server_only = 1 if 'role' in port and port['role'] == 'master' else 0 %}
+{% set port_log_announce_interval = port['log_announce_interval'] if 'log_announce_interval' in port else log_announce_interval %}
+{% set port_announce_receipt_timeout = port['announce_receipt_timeout'] if 'announce_receipt_timeout' in port else announce_receipt_timeout %}
+{% set port_log_sync_interval = port['log_sync_interval'] if 'log_sync_interval' in port else log_sync_interval %}
+{% set port_log_min_delay_req_interval = port['log_min_delay_req_interval'] if 'log_min_delay_req_interval' in port else log_min_delay_req_interval %}
+{% set port_log_min_pdelay_req_interval = port['log_min_pdelay_req_interval'] if 'log_min_pdelay_req_interval' in port else log_min_pdelay_req_interval %}
+
+[{{ ifname }}]
+serverOnly              {{ server_only }}
+logAnnounceInterval     {{ port_log_announce_interval }}
+announceReceiptTimeout  {{ port_announce_receipt_timeout }}
+logSyncInterval         {{ port_log_sync_interval }}
+logMinDelayReqInterval  {{ port_log_min_delay_req_interval }}
+logMinPdelayReqInterval {{ port_log_min_pdelay_req_interval }}
+{% if unicast and port.get('unicast_master') %}
+{% set ut2.id = ut2.id + 1 %}
+unicast_master_table    {{ ut2.id }}
+{% endif %}
+
+{% endfor %}

@@ -1,0 +1,363 @@
+module sonic-ptp {
+    namespace "http://github.com/sonic-net/sonic-ptp";
+    prefix sptp;
+    yang-version 1.1;
+
+    import sonic-port {
+        prefix port;
+    }
+
+    import ietf-inet-types {
+        prefix inet;
+    }
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONiC PTP (IEEE 1588v2) YANG model. Covers PTP_CLOCK and PTP_PORT
+         in CONFIG_DB. Instance-completeness rules (e.g. ordinary-clock
+         requires exactly one PTP port, boundary-clock requires at least two)
+         and physical-port eligibility rules (e.g. PTP port must not be a
+         member of a VLAN or PortChannel) are enforced by clockcfgd and the
+         shared CLI preflight, not by this model.";
+
+    revision 2026-06-16 {
+        description
+            "Add cast_mode (multicast/unicast) to PTP_CLOCK and the
+             unicast_master leaf-list to PTP_PORT for unicast PTP support.";
+    }
+
+    revision 2026-05-18 {
+        description
+            "Initial revision.";
+    }
+
+    container sonic-ptp {
+
+        container PTP_CLOCK {
+
+            description
+                "PTP global clock configuration. Contains exactly one row,
+                 keyed by the literal string GLOBAL.";
+
+            list PTP_CLOCK_LIST {
+                key "name";
+                max-elements 1;
+
+                leaf name {
+                    type string;
+                    must "current() = 'GLOBAL'" {
+                        error-message "PTP_CLOCK key must be GLOBAL";
+                    }
+                    description
+                        "Fixed key. The only valid value is GLOBAL.";
+                }
+
+                leaf mode {
+                    type enumeration {
+                        enum "disable";
+                        enum "ordinary-clock";
+                        enum "boundary-clock";
+                    }
+                    default "disable";
+                    description
+                        "Global clock mode and administrative state.
+                         disable: no PTP protocol instance runs.
+                         ordinary-clock / boundary-clock: select the clock role
+                         and start the instance when the configuration is valid.";
+                }
+
+                leaf domain_number {
+                    type uint8 {
+                        range "0..127";
+                    }
+                    default "0";
+                    description
+                        "PTP domain number (IEEE 1588 domainNumber).";
+                }
+
+                leaf priority1 {
+                    type uint8;
+                    default "128";
+                    description
+                        "BMCA priority1 attribute advertised in Announce.";
+                }
+
+                leaf priority2 {
+                    type uint8;
+                    default "128";
+                    description
+                        "BMCA priority2 attribute advertised in Announce.";
+                }
+
+                leaf network_transport {
+                    type enumeration {
+                        enum "l2";
+                        enum "udpv4";
+                        enum "udpv6";
+                    }
+                    default "l2";
+                    description
+                        "PTP packet transport: native Ethernet (l2) or UDP
+                         over IPv4 / IPv6. In the initial release, udpv4 /
+                         udpv6 apply only to routed physical front-panel
+                         interfaces, while l2 applies only to non-routed
+                         physical front-panel interfaces.";
+                }
+
+                leaf cast_mode {
+                    type enumeration {
+                        enum "multicast";
+                        enum "unicast";
+                    }
+                    default "multicast";
+                    must "not(current() = 'unicast' and ../network_transport = 'l2')" {
+                        error-message "cast_mode=unicast is invalid with network_transport=l2; unicast requires udpv4 or udpv6";
+                    }
+                    description
+                        "PTP packet delivery mode. multicast (default) discovers
+                         masters through multicast Announce. unicast runs linuxptp
+                         unicast negotiation against the statically configured
+                         PTP_PORT|<ifname>.unicast_master list; it is only valid
+                         with network_transport=udpv4 / udpv6, never with l2. The
+                         remaining unicast invariants (a role=auto port must carry
+                         a master, a role=master port must not, no master list under
+                         multicast, address-family match) are enforced by clockcfgd
+                         and the CLI preflight, not by this model.";
+                }
+
+                leaf udp6_scope {
+                    when "../network_transport = 'udpv6'";
+                    type uint8 {
+                        range "0..15";
+                    }
+                    default "14";
+                    description
+                        "IPv6 multicast scope; only relevant when
+                         network_transport=udpv6. Maps to the ptp4l
+                         udp6_scope option.";
+                }
+
+                leaf dataset_comparison {
+                    type enumeration {
+                        enum "ieee1588";
+                        enum "g.8275.x";
+                    }
+                    default "ieee1588";
+                    description
+                        "BMCA dataset comparison method.";
+                }
+
+                leaf delay_mechanism {
+                    type enumeration {
+                        enum "e2e";
+                        enum "p2p";
+                        enum "auto";
+                    }
+                    default "e2e";
+                    description
+                        "Delay measurement mechanism for ordinary-clock and
+                         boundary-clock. e2e uses Delay_Req/Delay_Resp, p2p
+                         uses Pdelay_Req/Pdelay_Resp, and auto starts with
+                         e2e then switches to p2p when peer-delay messages
+                         are detected.";
+                }
+
+                leaf log_announce_interval {
+                    type int8 {
+                        range "-128..127";
+                    }
+                    default "1";
+                    description
+                        "Global default logAnnounceInterval, in
+                         log2(seconds).";
+                }
+
+                leaf announce_receipt_timeout {
+                    type uint8 {
+                        range "2..255";
+                    }
+                    default "3";
+                    description
+                        "Global default announceReceiptTimeout, counted in
+                         announce intervals.";
+                }
+
+                leaf log_sync_interval {
+                    type int8 {
+                        range "-128..127";
+                    }
+                    default "0";
+                    description
+                        "Global default logSyncInterval, in log2(seconds).";
+                }
+
+                leaf log_min_delay_req_interval {
+                    type int8 {
+                        range "-128..127";
+                    }
+                    default "0";
+                    description
+                        "Global default logMinDelayReqInterval, in
+                         log2(seconds). Controls the e2e Delay_Req period;
+                         also applies when delay_mechanism=auto before the
+                         port transitions to p2p operation.";
+                }
+
+                leaf log_min_pdelay_req_interval {
+                    type int8 {
+                        range "-128..127";
+                    }
+                    default "0";
+                    description
+                        "Global default logMinPdelayReqInterval, in
+                         log2(seconds). Controls the p2p Pdelay_Req period;
+                         also applies when delay_mechanism=auto after the
+                         port transitions to p2p operation.";
+                }
+
+                leaf step_mode {
+                    type enumeration {
+                        enum "one-step";
+                        enum "two-step";
+                    }
+                    default "two-step";
+                    description
+                        "Global timestamp mode. Influences ptp4l twoStepFlag
+                         and is consumed by clockmgrd/clockorch to program
+                         SAI_PORT_ATTR_PTP_MODE.";
+                }
+
+                leaf client_only {
+                    type boolean;
+                    default "true";
+                    description
+                        "When true, the local clock is excluded from BMCA
+                         master candidacy (ptp4l clientOnly=1). Setting
+                         clock_source=1pps forces clientOnly=0 at render
+                         time regardless of this field.";
+                }
+
+                leaf clock_source {
+                    type enumeration {
+                        enum "ptp";
+                        enum "1pps";
+                    }
+                    default "ptp";
+                    must "not(current() = '1pps' and ../client_only = 'true')" {
+                        error-message "clock_source=1pps is invalid when client_only=true";
+                    }
+                    must "not(current() = '1pps' and /sptp:sonic-ptp/sptp:PTP_PORT/sptp:PTP_PORT_LIST/sptp:role = 'auto')" {
+                        error-message "clock_source=1pps requires every PTP_PORT entry to have role=master; one or more ports currently have role=auto";
+                    }
+                    description
+                        "Time/phase reference selection. ptp: discipline PHC
+                         from upstream PTP. 1pps: device acts as grandmaster
+                         and its phase reference is the hardware 1PPS input
+                         (typically driven by an external GNSS receiver).";
+                }
+            }
+        }
+
+        container PTP_PORT {
+
+            description
+                "Per-port PTP configuration. Each entry references a
+                 physical front-panel port from sonic-port/PORT.";
+
+            list PTP_PORT_LIST {
+                key "name";
+
+                leaf name {
+                    type leafref {
+                        path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+                    }
+                    description
+                        "Front-panel port that participates in PTP. The
+                         initial release supports physical ports only;
+                         logical interfaces (VLAN/SVI, VLAN subinterfaces,
+                         PortChannel) are not supported as PTP endpoints.";
+                }
+
+                leaf role {
+                    type enumeration {
+                        enum "auto";
+                        enum "master";
+                    }
+                    default "auto";
+                    must "not(current() = 'master' and /sptp:sonic-ptp/sptp:PTP_CLOCK/sptp:PTP_CLOCK_LIST[sptp:name='GLOBAL']/sptp:client_only = 'true')" {
+                        error-message "role=master is invalid when PTP_CLOCK|GLOBAL.client_only=true";
+                    }
+                    must "not(current() = 'auto' and /sptp:sonic-ptp/sptp:PTP_CLOCK/sptp:PTP_CLOCK_LIST[sptp:name='GLOBAL']/sptp:clock_source = '1pps')" {
+                        error-message "role=auto is invalid when PTP_CLOCK|GLOBAL.clock_source=1pps; every PTP port must have role=master in 1pps grandmaster mode";
+                    }
+                    description
+                        "Port role hint. auto: BMCA decides. master: forced
+                         server-only (serverOnly=1 in ptp4l), required for
+                         every port when clock_source=1pps.";
+                }
+
+                leaf log_announce_interval {
+                    type int8 {
+                        range "-128..127";
+                    }
+                    description
+                        "Per-port override of logAnnounceInterval. Inherits
+                         PTP_CLOCK|GLOBAL value when unset.";
+                }
+
+                leaf announce_receipt_timeout {
+                    type uint8 {
+                        range "2..255";
+                    }
+                    description
+                        "Per-port override of announceReceiptTimeout.
+                         Inherits PTP_CLOCK|GLOBAL value when unset.";
+                }
+
+                leaf log_sync_interval {
+                    type int8 {
+                        range "-128..127";
+                    }
+                    description
+                        "Per-port override of logSyncInterval. Inherits
+                         PTP_CLOCK|GLOBAL value when unset.";
+                }
+
+                leaf log_min_delay_req_interval {
+                    type int8 {
+                        range "-128..127";
+                    }
+                    description
+                        "Per-port override of logMinDelayReqInterval.
+                         Inherits PTP_CLOCK|GLOBAL value when unset.";
+                }
+
+                leaf log_min_pdelay_req_interval {
+                    type int8 {
+                        range "-128..127";
+                    }
+                    description
+                        "Per-port override of logMinPdelayReqInterval.
+                         Inherits PTP_CLOCK|GLOBAL value when unset.";
+                }
+
+                leaf-list unicast_master {
+                    type inet:ip-address;
+                    description
+                        "Static list of upstream master IP addresses this port
+                         runs unicast negotiation against. Only valid on a
+                         role=auto port when PTP_CLOCK|GLOBAL.cast_mode=unicast;
+                         a role=master port or cast_mode=multicast rejects it, and
+                         each address must match the network_transport family.
+                         These cross-table / per-element constraints are enforced
+                         by clockcfgd and the CLI preflight, not by this model.";
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,80 @@
+{
+    "SYNCE_CLOCK_DISABLE_DEFAULTS_TEST": {
+        "desc": "SYNCE_CLOCK with just the GLOBAL key; every other leaf uses its YANG default"
+    },
+    "SYNCE_CLOCK_AUTO_OPTION1_TEST": {
+        "desc": "SYNCE_CLOCK auto mode, network_type=1 with an Option-1 max_out_ssm and a spread of attributes"
+    },
+    "SYNCE_CLOCK_MANUAL_PORT_TEST": {
+        "desc": "manual mode with manual_port set to a physical interface"
+    },
+    "SYNCE_CLOCK_MANUAL_EXTERNAL_TEST": {
+        "desc": "manual mode with manual_port set to 'external'"
+    },
+    "SYNCE_CLOCK_OPTION2_TEST": {
+        "desc": "network_type=2 with an Option-2 max_out_ssm value"
+    },
+    "SYNCE_PORT_TEST": {
+        "desc": "SYNCE_PORT entry on a physical interface with priority and ssm"
+    },
+    "SYNCE_PORT_EXTERNAL_TEST": {
+        "desc": "SYNCE_PORT entry on the 'external' source"
+    },
+
+    "SYNCE_CLOCK_INVALID_ID_TEST": {
+        "desc": "SYNCE_CLOCK key other than 'GLOBAL' is rejected by the pattern",
+        "eStrKey": "Pattern"
+    },
+    "SYNCE_CLOCK_INVALID_MODE_TEST": {
+        "desc": "mode value outside the enum is rejected",
+        "eStrKey": "InvalidValue",
+        "eStr": ["mode"]
+    },
+    "SYNCE_CLOCK_MANUAL_PORT_WITHOUT_MANUAL_MODE_TEST": {
+        "desc": "manual_port is only valid when mode=manual; setting it under mode=auto violates the when condition",
+        "eStrKey": "When",
+        "eStr": ["manual_port"]
+    },
+    "SYNCE_CLOCK_MANUAL_PORT_INVALID_PATTERN_TEST": {
+        "desc": "manual_port that is neither a valid Ethernet name nor 'external' is rejected by the pattern",
+        "eStr": ["Invalid interface name", "manual_port"]
+    },
+    "SYNCE_CLOCK_INFO_INTERVAL_OUT_OF_RANGE_TEST": {
+        "desc": "information_interval above 60 is rejected by the type range",
+        "eStrKey": "Range",
+        "eStr": ["information_interval"]
+    },
+    "SYNCE_CLOCK_HOLDOFF_OUT_OF_RANGE_TEST": {
+        "desc": "holdoff_interval above 300 is rejected by the type range",
+        "eStrKey": "Range",
+        "eStr": ["holdoff_interval"]
+    },
+    "SYNCE_CLOCK_WTR_OUT_OF_RANGE_TEST": {
+        "desc": "wait_to_restore_interval above 3600 is rejected by the type range",
+        "eStrKey": "Range",
+        "eStr": ["wait_to_restore_interval"]
+    },
+    "SYNCE_CLOCK_INVALID_NETWORK_TYPE_TEST": {
+        "desc": "network_type outside {1,2} is rejected",
+        "eStrKey": "InvalidValue",
+        "eStr": ["network_type"]
+    },
+    "SYNCE_CLOCK_SSM_MISMATCH_NETWORK_TYPE_TEST": {
+        "desc": "max_out_ssm must match the selected network_type; an Option-2 value under network_type=1 violates the must constraint",
+        "eStr": ["max_out_ssm must match the allowed values"]
+    },
+    "SYNCE_PORT_PRIORITY_OUT_OF_RANGE_TEST": {
+        "desc": "port priority below 1 is rejected by the type range",
+        "eStrKey": "Range",
+        "eStr": ["priority"]
+    },
+    "SYNCE_PORT_INVALID_IFNAME_TEST": {
+        "desc": "interface_name that does not match the Ethernet/external pattern is rejected",
+        "eStr": ["Invalid interface name", "interface_name"]
+    },
+    "SYNCE_PORT_INVALID_SSM_TEST": {
+        "desc": "ssm value outside the ssm-value-type enum is rejected",
+        "eStrKey": "InvalidValue",
+        "eStr": ["ssm"]
+    }
+}

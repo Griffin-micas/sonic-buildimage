@@ -1,0 +1,182 @@
+module sonic-synce {
+    namespace "http://github.com/sonic-net/sonic-synce";
+    prefix ssynce;
+    yang-version 1.1;
+
+    organization
+        "SONiC";
+
+    contact
+        "SONiC";
+
+    description
+        "SONiC SyncE (Synchronous Ethernet, ITU-T G.8264 / G.781) YANG model.
+         Covers SYNCE_CLOCK and SYNCE_PORT in CONFIG_DB.";
+
+    revision 2026-05-25 {
+        description
+            "Initial revision.";
+    }
+
+    typedef ssm-value-type {
+        type enumeration {
+            enum PRC;
+            enum SSU-A;
+            enum SSU-B;
+            enum SEC;
+            enum DNU;
+            enum PRS;
+            enum STU;
+            enum ST2;
+            enum TNC;
+            enum ST3E;
+            enum ST3;
+            enum SMC;
+            enum PROV;
+            enum DUS;
+        }
+        description
+            "G.781 SSM quality-level codes. Option 1 uses PRC / SSU-A / SSU-B /
+             SEC / DNU; Option 2 uses PRS / STU / ST2 / TNC / ST3E / ST3 / SMC /
+             PROV / DUS.";
+    }
+
+    container sonic-synce {
+
+        container SYNCE_CLOCK {
+            description "Global configuration container for SyncE.";
+
+            list SYNCE_CLOCK_LIST {
+                key "id";
+                description "List of global SyncE configurations.";
+
+                leaf id {
+                    type string {
+                        pattern "GLOBAL";
+                    }
+                    description "Global key identifier.";
+                }
+
+                leaf mode {
+                    type enumeration {
+                        enum disable;
+                        enum manual;
+                        enum auto;
+                    }
+                    description "SyncE clock operation mode.";
+                }
+
+                leaf manual_port {
+                    when "current()/../mode = 'manual'";
+                    type string {
+                        pattern "Ethernet([1-3][0-9]{3}|[1-9][0-9]{2}|[1-9][0-9]|[0-9])|external" {
+                            error-message "Invalid interface name";
+                            error-app-tag interface-name-invalid;
+                        }
+                    }
+                    description "Specified port or 'external' when mode is manual.";
+                }
+
+                leaf pll_mode {
+                    type enumeration {
+                        enum auto;
+                        enum hold;
+                        enum free;
+                    }
+                    description "SyncE PLL operational mode.";
+                }
+
+                leaf ssm_mode {
+                    type enumeration {
+                        enum enabled;
+                        enum disabled;
+                    }
+                    default "disabled";
+                    description "Enable or disable SSM processing.";
+                }
+
+                leaf switch_mode {
+                    type enumeration {
+                        enum revertive;
+                        enum non-revertive;
+                    }
+                    default "revertive";
+                    description "Switch mode for clock source selection.";
+                }
+
+                leaf network_type {
+                    type enumeration {
+                        enum "1";
+                        enum "2";
+                    }
+                    default "1";
+                    description "Network type: Option 1 or Option 2.";
+                }
+
+                leaf information_interval {
+                    type uint16 {
+                        range "1..60";
+                    }
+                    default 1;
+                    description "Interval for sending ESMC information (seconds).";
+                }
+
+                leaf holdoff_interval {
+                    type uint16 {
+                        range "1..300";
+                    }
+                    default 10;
+                    description "Hold-off interval before disqualifying a failed source (seconds).";
+                }
+
+                leaf wait_to_restore_interval {
+                    type uint16 {
+                        range "1..3600";
+                    }
+                    default 300;
+                    description "Wait to restore time for a recovered source (seconds).";
+                }
+
+                leaf max_out_ssm {
+                    type ssm-value-type;
+                    must "(current()/../network_type = '1' and (current() = 'PRC' or current() = 'SSU-A' or current() = 'SSU-B' or current() = 'SEC' or current() = 'DNU')) or " +
+                         "(current()/../network_type = '2' and (current() = 'PRS' or current() = 'STU' or current() = 'ST2' or current() = 'TNC' or current() = 'ST3E' or current() = 'ST3' or current() = 'SMC' or current() = 'PROV' or current() = 'DUS'))" {
+                        error-message "max_out_ssm must match the allowed values for the selected network_type.";
+                    }
+                    description "Maximum transmit SSM quality level (global cap applied to ESMC TX).";
+                }
+            }
+        }
+
+        container SYNCE_PORT {
+            description "Port-level configuration container for SyncE.";
+
+            list SYNCE_PORT_LIST {
+                key "interface_name";
+                description "List of SyncE port configurations.";
+
+                leaf interface_name {
+                    type string {
+                        pattern "Ethernet([1-3][0-9]{3}|[1-9][0-9]{2}|[1-9][0-9]|[0-9])|external" {
+                            error-message "Invalid interface name";
+                            error-app-tag interface-name-invalid;
+                        }
+                    }
+                    description "Ethernet interface name or 'external'.";
+                }
+
+                leaf priority {
+                    type uint8 {
+                        range "1..255";
+                    }
+                    description "Port priority for clock selection.";
+                }
+
+                leaf ssm {
+                    type ssm-value-type;
+                    description "Configured SSM value for the port.";
+                }
+            }
+        }
+    }
+}

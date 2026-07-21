@@ -1,0 +1,337 @@
+{
+    "PTP_CLOCK_DISABLE_DEFAULTS_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    {
+                        "name": "GLOBAL"
+                    }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_ORDINARY_CLOCK_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    {
+                        "name": "GLOBAL",
+                        "mode": "ordinary-clock",
+                        "domain_number": 24,
+                        "priority1": 100,
+                        "priority2": 100,
+                        "network_transport": "l2",
+                        "dataset_comparison": "g.8275.x",
+                        "delay_mechanism": "e2e",
+                        "log_announce_interval": 0,
+                        "announce_receipt_timeout": 3,
+                        "log_sync_interval": -3,
+                        "log_min_delay_req_interval": -3,
+                        "step_mode": "two-step",
+                        "client_only": "true",
+                        "clock_source": "ptp"
+                    }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_UDPV6_WITH_SCOPE_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    {
+                        "name": "GLOBAL",
+                        "mode": "boundary-clock",
+                        "network_transport": "udpv6",
+                        "udp6_scope": 14
+                    }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_1PPS_GRANDMASTER_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    { "admin_status": "up", "alias": "eth0", "description": "Ethernet0", "lanes": "65", "mtu": 9000, "name": "Ethernet0", "speed": 25000 },
+                    { "admin_status": "up", "alias": "eth1", "description": "Ethernet1", "lanes": "66", "mtu": 9000, "name": "Ethernet1", "speed": 25000 }
+                ]
+            }
+        },
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    {
+                        "name": "GLOBAL",
+                        "mode": "boundary-clock",
+                        "client_only": "false",
+                        "clock_source": "1pps"
+                    }
+                ]
+            },
+            "sonic-ptp:PTP_PORT": {
+                "PTP_PORT_LIST": [
+                    { "name": "Ethernet0", "role": "master" },
+                    { "name": "Ethernet1", "role": "master" }
+                ]
+            }
+        }
+    },
+    "PTP_PORT_AUTO_ROLE_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    { "admin_status": "up", "alias": "eth0", "description": "Ethernet0", "lanes": "65", "mtu": 9000, "name": "Ethernet0", "speed": 25000 }
+                ]
+            }
+        },
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "ordinary-clock" }
+                ]
+            },
+            "sonic-ptp:PTP_PORT": {
+                "PTP_PORT_LIST": [
+                    {
+                        "name": "Ethernet0",
+                        "role": "auto",
+                        "log_announce_interval": -1,
+                        "announce_receipt_timeout": 3,
+                        "log_sync_interval": -4,
+                        "log_min_delay_req_interval": -4,
+                        "log_min_pdelay_req_interval": -4
+                    }
+                ]
+            }
+        }
+    },
+    "PTP_PORT_MASTER_ROLE_WITH_CLIENT_ONLY_FALSE_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    { "admin_status": "up", "alias": "eth0", "description": "Ethernet0", "lanes": "65", "mtu": 9000, "name": "Ethernet0", "speed": 25000 }
+                ]
+            }
+        },
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "boundary-clock", "client_only": "false" }
+                ]
+            },
+            "sonic-ptp:PTP_PORT": {
+                "PTP_PORT_LIST": [
+                    { "name": "Ethernet0", "role": "master" }
+                ]
+            }
+        }
+    },
+
+    "PTP_CLOCK_INVALID_KEY_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL_X" }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_INVALID_MODE_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "transparent-clock" }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_DOMAIN_OUT_OF_RANGE_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "domain_number": 200 }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_UDP6_SCOPE_OUT_OF_RANGE_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    {
+                        "name": "GLOBAL",
+                        "network_transport": "udpv6",
+                        "udp6_scope": 16
+                    }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_UDP6_SCOPE_WITHOUT_UDPV6_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    {
+                        "name": "GLOBAL",
+                        "network_transport": "l2",
+                        "udp6_scope": 14
+                    }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_1PPS_WITH_CLIENT_ONLY_TRUE_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    {
+                        "name": "GLOBAL",
+                        "mode": "boundary-clock",
+                        "client_only": "true",
+                        "clock_source": "1pps"
+                    }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_1PPS_WITH_AUTO_ROLE_PORT_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    { "admin_status": "up", "alias": "eth0", "description": "Ethernet0", "lanes": "65", "mtu": 9000, "name": "Ethernet0", "speed": 25000 },
+                    { "admin_status": "up", "alias": "eth1", "description": "Ethernet1", "lanes": "66", "mtu": 9000, "name": "Ethernet1", "speed": 25000 }
+                ]
+            }
+        },
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    {
+                        "name": "GLOBAL",
+                        "mode": "boundary-clock",
+                        "client_only": "false",
+                        "clock_source": "1pps"
+                    }
+                ]
+            },
+            "sonic-ptp:PTP_PORT": {
+                "PTP_PORT_LIST": [
+                    { "name": "Ethernet0", "role": "master" },
+                    { "name": "Ethernet1", "role": "auto" }
+                ]
+            }
+        }
+    },
+    "PTP_PORT_MASTER_ROLE_WITH_CLIENT_ONLY_TRUE_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    { "admin_status": "up", "alias": "eth0", "description": "Ethernet0", "lanes": "65", "mtu": 9000, "name": "Ethernet0", "speed": 25000 }
+                ]
+            }
+        },
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "boundary-clock", "client_only": "true" }
+                ]
+            },
+            "sonic-ptp:PTP_PORT": {
+                "PTP_PORT_LIST": [
+                    { "name": "Ethernet0", "role": "master" }
+                ]
+            }
+        }
+    },
+    "PTP_PORT_INVALID_LEAFREF_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    { "admin_status": "up", "alias": "eth0", "description": "Ethernet0", "lanes": "65", "mtu": 9000, "name": "Ethernet0", "speed": 25000 }
+                ]
+            }
+        },
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "ordinary-clock" }
+                ]
+            },
+            "sonic-ptp:PTP_PORT": {
+                "PTP_PORT_LIST": [
+                    { "name": "Ethernet9999", "role": "auto" }
+                ]
+            }
+        }
+    },
+    "PTP_PORT_INVALID_ROLE_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    { "admin_status": "up", "alias": "eth0", "description": "Ethernet0", "lanes": "65", "mtu": 9000, "name": "Ethernet0", "speed": 25000 }
+                ]
+            }
+        },
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "ordinary-clock" }
+                ]
+            },
+            "sonic-ptp:PTP_PORT": {
+                "PTP_PORT_LIST": [
+                    { "name": "Ethernet0", "role": "slave" }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_UNICAST_UDPV4_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "ordinary-clock", "network_transport": "udpv4", "cast_mode": "unicast" }
+                ]
+            }
+        }
+    },
+    "PTP_PORT_UNICAST_MASTER_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    { "admin_status": "up", "alias": "eth0", "description": "Ethernet0", "lanes": "65", "mtu": 9000, "name": "Ethernet0", "speed": 25000 }
+                ]
+            }
+        },
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "ordinary-clock", "network_transport": "udpv4", "cast_mode": "unicast" }
+                ]
+            },
+            "sonic-ptp:PTP_PORT": {
+                "PTP_PORT_LIST": [
+                    { "name": "Ethernet0", "role": "auto", "unicast_master": ["10.0.0.1", "10.0.0.2"] }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_INVALID_CAST_MODE_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "ordinary-clock", "network_transport": "udpv4", "cast_mode": "anycast" }
+                ]
+            }
+        }
+    },
+    "PTP_CLOCK_UNICAST_WITH_L2_TEST": {
+        "sonic-ptp:sonic-ptp": {
+            "sonic-ptp:PTP_CLOCK": {
+                "PTP_CLOCK_LIST": [
+                    { "name": "GLOBAL", "mode": "ordinary-clock", "network_transport": "l2", "cast_mode": "unicast" }
+                ]
+            }
+        }
+    }
+}

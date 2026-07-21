@@ -1,0 +1,58 @@
+{% from "dockers/dockerfile-macros.j2" import install_debian_packages, install_python_wheels, copy_files, rsync_from_builder_stage %}
+ARG BASE=docker-config-engine-bookworm-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
+
+FROM $BASE AS base
+
+ARG docker_container_name
+ARG image_version
+
+# Make apt-get non-interactive
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Pass the image_version to container
+ENV IMAGE_VERSION=$image_version
+
+# Update apt's cache of available packages and install network diagnostic
+# tools. PTP-specific tools (pmc, phc_ctl, hwstamp_ctl, phc2sys, ts2phc) are
+# already provided by the linuxptp package; only generic tools are added here.
+#   ethtool: -T timestamping caps, PHY/link, SyncE-related diagnostics
+#   tcpdump: capture/verify PTP messages (L2 0x88F7, UDP 319/320)
+RUN apt-get update && \
+    apt-get install -f -y \
+        ethtool \
+        tcpdump
+
+{% if docker_clock_debs.strip() -%}
+# Copy locally-built Debian package dependencies
+{{ copy_files("debs/", docker_clock_debs.split(' '), "/debs/") }}
+
+# Install locally-built Debian packages and implicitly install their dependencies
+{{ install_debian_packages(docker_clock_debs.split(' ')) }}
+{%- endif %}
+
+{% if docker_clock_whls.strip() -%}
+# Copy locally-built Python wheel dependencies
+{{ copy_files("python-wheels/", docker_clock_whls.split(' '), "/python-wheels/") }}
+
+# Install locally-built Python wheel dependencies
+{{ install_python_wheels(docker_clock_whls.split(' ')) }}
+{% endif %}
+
+COPY ["docker-clock-init.sh", "/usr/bin/"]
+COPY ["start.sh", "/usr/bin/"]
+COPY ["supervisord.conf.j2", "/usr/share/sonic/templates/"]
+COPY ["ptp4l.conf.j2", "/usr/share/sonic/templates/"]
+COPY ["synce.conf.j2", "/usr/share/sonic/templates/"]
+COPY ["critical_processes", "/etc/supervisor"]
+
+FROM $BASE
+
+ARG image_version
+
+{{ rsync_from_builder_stage() }}
+
+# Pass the image_version to container
+ENV IMAGE_VERSION=$image_version
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENTRYPOINT ["/usr/bin/docker-clock-init.sh"]

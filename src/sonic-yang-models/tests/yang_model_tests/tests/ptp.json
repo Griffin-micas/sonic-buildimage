@@ -1,0 +1,81 @@
+{
+    "PTP_CLOCK_DISABLE_DEFAULTS_TEST": {
+        "desc": "PTP_CLOCK with just the GLOBAL key; every other leaf uses its YANG default"
+    },
+    "PTP_CLOCK_ORDINARY_CLOCK_TEST": {
+        "desc": "PTP_CLOCK with mode=ordinary-clock and a broad spread of non-default attributes"
+    },
+    "PTP_CLOCK_UDPV6_WITH_SCOPE_TEST": {
+        "desc": "udp6_scope is allowed when network_transport=udpv6"
+    },
+    "PTP_CLOCK_1PPS_GRANDMASTER_TEST": {
+        "desc": "Valid 1pps grandmaster: client_only=false plus every PTP_PORT has role=master"
+    },
+    "PTP_PORT_AUTO_ROLE_TEST": {
+        "desc": "PTP_PORT with role=auto and per-port interval overrides"
+    },
+    "PTP_PORT_MASTER_ROLE_WITH_CLIENT_ONLY_FALSE_TEST": {
+        "desc": "PTP_PORT role=master is valid when PTP_CLOCK|GLOBAL.client_only=false"
+    },
+    "PTP_CLOCK_UNICAST_UDPV4_TEST": {
+        "desc": "cast_mode=unicast is valid with network_transport=udpv4"
+    },
+    "PTP_PORT_UNICAST_MASTER_TEST": {
+        "desc": "PTP_PORT carries a unicast_master leaf-list of IP addresses under cast_mode=unicast"
+    },
+
+    "PTP_CLOCK_INVALID_KEY_TEST": {
+        "desc": "PTP_CLOCK key other than 'GLOBAL' is rejected by must constraint",
+        "eStr": ["PTP_CLOCK key must be GLOBAL"]
+    },
+    "PTP_CLOCK_INVALID_MODE_TEST": {
+        "desc": "mode value outside the enum (e.g. transparent-clock) is rejected",
+        "eStrKey": "InvalidValue",
+        "eStr": ["mode"]
+    },
+    "PTP_CLOCK_DOMAIN_OUT_OF_RANGE_TEST": {
+        "desc": "domain_number above 127 is rejected by the type range",
+        "eStrKey": "Range",
+        "eStr": ["domain_number"]
+    },
+    "PTP_CLOCK_UDP6_SCOPE_OUT_OF_RANGE_TEST": {
+        "desc": "udp6_scope above 15 is rejected by the type range",
+        "eStrKey": "Range",
+        "eStr": ["udp6_scope"]
+    },
+    "PTP_CLOCK_UDP6_SCOPE_WITHOUT_UDPV6_TEST": {
+        "desc": "udp6_scope is only valid when network_transport=udpv6; setting it under l2 violates the when condition",
+        "eStrKey": "When",
+        "eStr": ["udp6_scope"]
+    },
+    "PTP_CLOCK_1PPS_WITH_CLIENT_ONLY_TRUE_TEST": {
+        "desc": "clock_source=1pps combined with client_only=true is rejected by must constraint",
+        "eStr": ["clock_source=1pps is invalid when client_only=true"]
+    },
+    "PTP_CLOCK_1PPS_WITH_AUTO_ROLE_PORT_TEST": {
+        "desc": "clock_source=1pps requires every PTP_PORT to have role=master; an auto-role port violates the must constraint",
+        "eStr": ["clock_source=1pps requires every PTP_PORT entry to have role=master"]
+    },
+    "PTP_PORT_MASTER_ROLE_WITH_CLIENT_ONLY_TRUE_TEST": {
+        "desc": "PTP_PORT role=master is invalid when PTP_CLOCK|GLOBAL.client_only=true",
+        "eStr": ["role=master is invalid when PTP_CLOCK|GLOBAL.client_only=true"]
+    },
+    "PTP_PORT_INVALID_LEAFREF_TEST": {
+        "desc": "PTP_PORT.name must leafref into sonic-port/PORT; non-existent port is rejected",
+        "eStrKey": "LeafRef"
+    },
+    "PTP_PORT_INVALID_ROLE_TEST": {
+        "desc": "PTP_PORT.role value outside the enum (e.g. slave) is rejected",
+        "eStrKey": "InvalidValue",
+        "eStr": ["role"]
+    },
+    "PTP_CLOCK_INVALID_CAST_MODE_TEST": {
+        "desc": "cast_mode value outside the enum (e.g. anycast) is rejected",
+        "eStrKey": "InvalidValue",
+        "eStr": ["cast_mode"]
+    },
+    "PTP_CLOCK_UNICAST_WITH_L2_TEST": {
+        "desc": "cast_mode=unicast combined with network_transport=l2 is rejected by must constraint",
+        "eStr": ["cast_mode=unicast is invalid with network_transport=l2"]
+    }
+}
